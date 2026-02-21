@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BERDAZI - Bertahan Dari Zombie</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Babel untuk JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    /* Custom Scrollbar hide */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    /* Animation Utilities */
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 8s linear infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* Glass Effect Utility */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 overflow-hidden">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- ICONS ---
+    const IconWrapper = ({ children, size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        {children}
+      </svg>
+    );
+
+    const Brain = (props) => <IconWrapper {...props}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></IconWrapper>;
+    const ShoppingBag = (props) => <IconWrapper {...props}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></IconWrapper>;
+    const ArrowRight = (props) => <IconWrapper {...props}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></IconWrapper>;
+    const Maximize = (props) => <IconWrapper {...props}><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></IconWrapper>;
+    const Minimize = (props) => <IconWrapper {...props}><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></IconWrapper>;
+    const X = (props) => <IconWrapper {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconWrapper>;
+    const ChevronLeft = (props) => <IconWrapper {...props}><path d="m15 18-6-6 6-6"/></IconWrapper>;
+    const Sparkles = (props) => <IconWrapper {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 5h4"/><path d="M19 17v4"/><path d="M15 19h4"/></IconWrapper>;
+    const Zap = (props) => <IconWrapper {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></IconWrapper>;
+    const Shield = (props) => <IconWrapper {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></IconWrapper>;
+    const Skull = (props) => <IconWrapper {...props}><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/></IconWrapper>;
+    const AlertTriangle = (props) => <IconWrapper {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconWrapper>;
+    const CheckCircle = (props) => <IconWrapper {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconWrapper>;
+    const Star = (props) => <IconWrapper {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></IconWrapper>;
+    const Award = (props) => <IconWrapper {...props}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></IconWrapper>;
+    const User = (props) => <IconWrapper {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>;
+    const Play = (props) => <IconWrapper {...props}><polygon points="5 3 19 12 5 21 5 3"/></IconWrapper>;
+    const Volume2 = (props) => <IconWrapper {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></IconWrapper>;
+    const VolumeX = (props) => <IconWrapper {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></IconWrapper>;
+    const Home = (props) => <IconWrapper {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconWrapper>;
+
+    // --- DATA ---
+
+    const QUESTION_BANK = {
+      easy: [
+        { subject: 'Pendidikan Pancasila', q: 'Wilayah Negara Kesatuan Republik Indonesia terletak di antara dua samudra, yaitu ....', options: ['Samudra Pasifik dan Samudra Atlantik', 'Samudra Hindia dan Samudra Pasifik', 'Samudra Hindia dan Samudra Atlantik', 'Samudra Atlantik dan Samudra Indonesia'], a: 1 },
+        { subject: 'IPAS', q: 'Hasil cipta, rasa, dan karsa manusia untuk memenuhi kebutuhan hidupnya adalah pengertian dari ....', options: ['adat', 'budaya', 'kesenian', 'kreativitas'], a: 1 },
+        { subject: 'Pendidikan Pancasila', q: 'Perbedaan suku bangsa di Indonesia sebaiknya disikapi dengan mengutamakan ....', options: ['persaingan', 'perpecahan', 'kerukunan', 'kekuasaan'], a: 2 },
+        { subject: 'IPAS', q: 'Berikut ini yang bukan termasuk kegiatan produksi adalah ....', options: ['petani menanam padi', 'nelayan menangkap ikan', 'penjahit menjahit baju', 'ibu membeli sayur di pasar'], a: 3 },
+        { subject: 'Bahasa Indonesia', q: 'Ciri utama kalimat fakta adalah memiliki data yang ....', options: ['belum pasti', 'akurat', 'berupa khayalan', 'subjektif'], a: 1 },
+        { subject: 'Pendidikan Pancasila', q: 'Semboyan bangsa Indonesia yang tertulis pada kaki lambang Garuda Pancasila adalah ....', options: ['Pancasila Sakti', 'Tut Wuri Handayani', 'Bhinneka Tunggal Ika', 'UUD 1945'], a: 2 },
+        { subject: 'IPAS', q: 'Warisan budaya yang wujudnya dapat dilihat dan diraba (memiliki bentuk fisik) disebut warisan budaya ....', options: ['tak benda', 'benda', 'lisan', 'gagasan'], a: 1 },
+        { subject: 'Bahasa Indonesia', q: 'Kalimat yang isinya meminta seseorang untuk melakukan sesuatu disebut kalimat ....', options: ['tanya', 'berita', 'perintah', 'majemuk'], a: 2 },
+        { subject: 'Pendidikan Pancasila', q: 'Contoh sikap yang merusak pertemanan di sekolah adalah ....', options: ['membantu teman yang jatuh', 'memilih-milih teman berdasarkan kekayaan', 'mengerjakan tugas piket bersama', 'meminjamkan alat tulis'], a: 1 },
+        { subject: 'IPAS', q: 'Indonesia dikenal sebagai negara agraris karena sebagian besar penduduknya bekerja sebagai ....', options: ['nelayan', 'pedagang', 'petani', 'pegawai pabrik'], a: 2 },
+        { subject: 'Bahasa Indonesia', q: 'Singkatan dari "Sekolah Menengah Pertama" adalah ....', options: ['SMA', 'SMP', 'SD', 'SMK'], a: 1 },
+        { subject: 'Pendidikan Pancasila', q: 'Sikap peduli terhadap teman yang sedang sakit merupakan pengamalan sila Pancasila yang berkaitan dengan nilai ....', options: ['ketuhanan', 'kemanusiaan', 'persatuan', 'keadilan'], a: 1 },
+        { subject: 'IPAS', q: 'Gambar kecil yang ada pada peta untuk memperjelas lokasi suatu wilayah disebut ....', options: ['legenda', 'skala', 'inset', 'judul peta'], a: 2 },
+        { subject: 'Bahasa Indonesia', q: 'Ide pokok dalam sebuah paragraf biasanya dapat ditemukan di ....', options: ['kalimat penjelas', 'kalimat utama', 'judul bacaan', 'kesimpulan akhir'], a: 1 },
+        { subject: 'Pendidikan Pancasila', q: 'Manfaat hidup rukun di lingkungan masyarakat adalah ....', options: ['terciptanya suasana damai', 'sering terjadi pertengkaran', 'timbul rasa curiga', 'masyarakat menjadi tidak peduli'], a: 0 }
+      ],
+      medium: [
+        { subject: 'Pendidikan Pancasila', q: 'Masyarakat di dataran tinggi banyak bekerja sebagai petani teh, sedangkan di pantai sebagai nelayan. Hal ini menunjukkan keberagaman ekonomi disebabkan oleh faktor ....', options: ['letak strategis', 'kondisi geografis/alam', 'sarana transportasi', 'kemajuan teknologi'], a: 1 },
+        { subject: 'Bahasa Indonesia', q: '"Wah, pemandangan di pantai itu menurutku sangat indah sekali!" Kalimat tersebut termasuk jenis kalimat ....', options: ['fakta', 'opini', 'perintah', 'tanya'], a: 1 },
+        { subject: 'IPAS', q: 'Kegiatan menyalurkan barang dagangan dari pabrik ke toko-toko disebut ....', options: ['produksi', 'konsumsi', 'distribusi', 'retribusi'], a: 2 },
+        { subject: 'Pendidikan Pancasila', q: 'Jika tetanggamu sedang merayakan hari raya agamanya, sikap toleransi yang tepat adalah ....', options: ['membunyikan musik dengan keras', 'ikut melakukan ibadah mereka', 'mengucapkan selamat dan tidak mengganggu', 'menutup pintu rumah rapat-rapat'], a: 2 },
+        { subject: 'IPAS', q: 'Kelompok sumber daya alam di bawah ini yang termasuk SDA nonhayati (bukan makhluk hidup) adalah ....', options: ['sapi, kambing, ayam', 'padi, jagung, kedelai', 'emas, air, sinar matahari', 'mutiara, ikan, rumput laut'], a: 2 },
+        { subject: 'Bahasa Indonesia', q: 'Manakah di bawah ini yang termasuk kalimat perintah larangan?', options: ['"Ayo kita bersihkan kelas!"', '"Tolong ambilkan buku itu."', '"Dilarang membuang sampah di sungai!"', '"Harap tenang, ada ujian."'], a: 2 },
+        { subject: 'IPAS', q: 'Alasan utama Indonesia dijuluki sebagai negara maritim adalah ....', options: ['memiliki banyak gunung berapi', 'memiliki wilayah laut yang sangat luas', 'tanahnya sangat subur untuk bertani', 'terletak di antara dua benua'], a: 1 },
+        { subject: 'Pendidikan Pancasila', q: 'Memiliki teman dari berbagai suku dan budaya memberikan manfaat positif, yaitu ....', options: ['bisa saling membandingkan kekayaan', 'melatih sikap toleransi dan menghargai perbedaan', 'membentuk kelompok-kelompok eksklusif', 'memudahkan untuk bersaing satu sama lain'], a: 1 },
+        { subject: 'Bahasa Indonesia', q: 'Perbedaan yang benar antara singkatan dan akronim adalah ....', options: ['singkatan dibaca per huruf, akronim dibaca sebagai satu kata', 'singkatan dibaca satu kata, akronim dibaca per huruf', 'singkatan hanya untuk nama orang, akronim untuk organisasi', 'tidak ada perbedaan, keduanya sama saja'], a: 0 },
+        { subject: 'IPAS', q: 'Berikut ini yang termasuk contoh warisan budaya tak benda adalah ....', options: ['Candi Borobudur', 'Keris pusaka', 'Pantun dan Tari Saman', 'Patung Asmat'], a: 2 },
+        { subject: 'Pendidikan Pancasila', q: 'Makna "Bhinneka Tunggal Ika" yang paling tepat adalah ....', options: ['berbeda-beda tetapi tetap bermusuhan', 'sama rasa sama rata', 'berbeda-beda tetapi tetap satu jua', 'bersatu kita teguh bercerai kita runtuh'], a: 2 },
+        { subject: 'Bahasa Indonesia', q: 'Tujuan utama dari penulisan teks eksplanasi adalah ....', options: ['menghibur pembaca dengan cerita fiksi', 'menjelaskan proses sebab-akibat suatu fenomena', 'menggambarkan suatu objek secara rinci', 'mempengaruhi pembaca untuk membeli sesuatu'], a: 1 },
+        { subject: 'IPAS', q: 'Letak Indonesia sangat strategis di jalur perdagangan dunia. Dampak positifnya bagi ekonomi adalah ....', options: ['Indonesia menjadi negara yang tertutup', 'sulit masuknya barang impor', 'mudahnya kegiatan ekspor-impor dan pariwisata', 'budaya asli Indonesia menjadi hilang'], a: 2 },
+        { subject: 'Pendidikan Pancasila', q: 'Salah satu cara menjaga keutuhan NKRI di lingkungan sekolah adalah ....', options: ['ikut tawuran antar pelajar', 'mengejek teman yang berbeda daerah', 'mengikuti upacara bendera dengan khidmat', 'membolos saat jam pelajaran'], a: 2 },
+        { subject: 'Bahasa Indonesia', q: 'Penulisan huruf kapital yang benar terdapat pada kalimat ....', options: ['ibu membeli Gudeg di yogyakarta.', 'Ibu membeli gudeg di Yogyakarta.', 'Ibu membeli Gudeg di Yogyakarta.', 'ibu membeli gudeg di Yogyakarta.'], a: 1 }
+      ],
+      hard: [
+        { subject: 'Pendidikan Pancasila', q: 'Posisi silang Indonesia menyebabkan terjadinya akulturasi budaya. Dampak positif dari akulturasi ini bagi bangsa Indonesia adalah ....', options: ['budaya daerah menjadi punah digantikan budaya asing', 'memperkaya khazanah budaya bangsa', 'memicu konflik antarbudaya', 'masyarakat menolak segala budaya luar'], a: 1 },
+        { subject: 'IPAS', q: 'Penggunaan pestisida yang berlebihan dapat mengancam keseimbangan ekosistem karena ....', options: ['dapat menyuburkan tanah secara instan', 'hama menjadi semakin sedikit dan punah', 'dapat membunuh hewan lain yang bukan hama (predator alami)', 'meningkatkan hasil panen secara terus menerus'], a: 2 },
+        { subject: 'Pendidikan Pancasila', q: 'Bela hanya mau berteman dengan orang yang satu suku dengannya. Jika sikap Bela ini ditiru oleh banyak orang, dampak terburuknya bagi negara adalah ....', options: ['persatuan bangsa semakin kuat', 'munculnya perpecahan dan konflik antarsuku', 'budaya daerah semakin lestari', 'ekonomi masyarakat meningkat'], a: 1 },
+        { subject: 'Bahasa Indonesia', q: 'Ide pokok paragraf tentang Gunung Meletus ("Gunung meletus adalah peristiwa keluarnya magma...") adalah ....', options: ['dampak negatif gunung meletus', 'proses terjadinya gunung meletus', 'lokasi gunung berapi di Indonesia', 'cara menyelamatkan diri dari bencana'], a: 1 },
+        { subject: 'IPAS', q: 'Batik diakui UNESCO sebagai warisan budaya dunia. Alasan batik disebut produk ekonomi kreatif adalah ....', options: ['dibuat menggunakan mesin canggih dan cepat', 'mengandalkan ide, kreativitas seni, dan keterampilan manusia', 'bahan bakunya sangat mahal dan impor', 'hanya boleh dipakai oleh kalangan pejabat'], a: 1 },
+        { subject: 'Pendidikan Pancasila', q: 'Peristiwa bersejarah yang menjadi tonggak lahirnya Negara Kesatuan Republik Indonesia (NKRI) adalah ....', options: ['Sumpah Pemuda 1928', 'Proklamasi Kemerdekaan 17 Agustus 1945', 'Peristiwa Rengasdengklok', 'Serangan Umum 1 Maret'], a: 1 },
+        { subject: 'Bahasa Indonesia', q: 'Manakah di bawah ini yang merupakan kalimat opini?', options: ['Indonesia merdeka pada tahun 1945.', 'Matahari terbit dari sebelah timur.', 'Lukisan itu sangat indah dan menawan.', 'Air mendidih pada suhu 100 derajat Celcius.'], a: 2 },
+        { subject: 'IPAS', q: 'Indonesia dibagi menjadi 3 zona waktu (WIB, WITA, WIT). Penyebab utama perbedaan waktu ini adalah ....', options: ['letak lintang Indonesia di khatulistiwa', 'letak geologis yang memiliki banyak gunung', 'letak bujur Indonesia yang membentang luas', 'iklim tropis yang dimiliki Indonesia'], a: 2 },
+        { subject: 'Pendidikan Pancasila', q: 'Kemajuan transportasi memudahkan perpindahan penduduk antarpulau. Dampak sosial budaya dari fenomena tersebut adalah ....', options: ['terjadinya pembauran (asimilasi) antarsuku bangsa', 'masyarakat menjadi malas bepergian', 'harga tiket transportasi menjadi mahal', 'setiap suku mengisolasi diri di daerahnya'], a: 0 },
+        { subject: 'IPAS', q: 'Agar warisan budaya Indonesia tidak diklaim oleh negara lain, langkah paling tepat yang bisa dilakukan pelajar adalah ....', options: ['mematenkan budaya tersebut ke luar negeri', 'melarang turis asing melihat budaya kita', 'mempelajari dan melestarikan budaya tersebut', 'mengganti budaya tradisional dengan budaya modern'], a: 2 },
+        { subject: 'Bahasa Indonesia', q: 'Perbaikan ejaan yang tepat untuk kalimat: "di pulau jawa, banyak terdapat candi peninggalan kerajaan hindu." adalah ....', options: ['Di Pulau Jawa, banyak terdapat candi peninggalan Kerajaan Hindu.', 'Di pulau jawa, banyak terdapat Candi peninggalan kerajaan Hindu.', 'Di Pulau Jawa, banyak terdapat Candi peninggalan Kerajaan hindu.', 'Di pulau Jawa, banyak terdapat candi peninggalan kerajaan Hindu.'], a: 0 },
+        { subject: 'Pendidikan Pancasila', q: 'Mengapa pengendalian diri sangat penting dalam menjaga keutuhan NKRI di tengah masyarakat yang majemuk?', options: ['Agar kita bisa menguasai orang lain', 'Untuk mencegah terjadinya gesekan atau konflik SARA', 'Supaya kita dipuji sebagai orang sabar', 'Agar kita mendapatkan hadiah dari pemerintah'], a: 1 },
+        { subject: 'IPAS', q: 'Berikut ini adalah contoh profesi yang termasuk dalam bidang ekonomi kreatif, yaitu ....', options: ['petani padi dan nelayan', 'buruh pabrik dan sopir', 'desainer grafis dan konten kreator', 'pegawai negeri dan tentara'], a: 2 },
+        { subject: 'Pendidikan Pancasila', q: 'Bentuk partisipasi nyata seorang siswa SD dalam mempertahankan kemerdekaan adalah ....', options: ['mengangkat senjata melawan penjajah', 'belajar dengan giat dan berprestasi', 'bekerja mencari uang untuk negara', 'ikut berkampanye politik'], a: 1 },
+        { subject: 'Bahasa Indonesia', q: 'Ciri utama teks deskripsi yang membedakannya dengan teks lain adalah ....', options: ['menjelaskan langkah-langkah membuat sesuatu', 'berisi argumen dan pendapat penulis', 'menggambarkan objek secara jelas melibatkan pancaindra', 'menceritakan kejadian masa lalu secara urut'], a: 2 }
+      ]
+    };
+
+    const CHARACTERS = {
+      green: [
+        { id: 'aldi', name: 'Aldi', title: 'Pemimpin Benteng', cost: 20000, energy: 80, img: 'https://i.imgur.com/9siXFlD.png', color: 'from-green-400 to-emerald-600' },
+        { id: 'bima', name: 'Bima', title: 'Penjaga Gerbang', cost: 20000, energy: 70, img: 'https://i.imgur.com/RQmyIxO.png', color: 'from-green-400 to-emerald-600' },
+        { id: 'dini', name: 'Dini', title: 'Pengintai Cepat', cost: 20000, energy: 60, img: 'https://i.imgur.com/9X72EOQ.png', color: 'from-green-400 to-emerald-600' },
+        { id: 'eko', name: 'Eko', title: 'Penguat Benteng', cost: 20000, energy: 80, img: 'https://i.imgur.com/6FrTJp0.png', color: 'from-green-400 to-emerald-600' },
+        { id: 'fani', name: 'Fani', title: 'Pengatur Logistik', cost: 20000, energy: 70, img: 'https://i.imgur.com/NcLmb3X.png', color: 'from-green-400 to-emerald-600' },
+        { id: 'gilang', name: 'Gilang', title: 'Pengalih Perhatian', cost: 20000, energy: 60, img: 'https://i.imgur.com/qnfshUS.png', color: 'from-green-400 to-emerald-600' },
+      ],
+      red: [
+        { id: 'raven', name: 'Raven', title: 'Ahli Strategi', cost: 50000, energy: 120, img: 'https://i.imgur.com/a3hAuaA.png', color: 'from-red-500 to-rose-700' },
+        { id: 'arga', name: 'Arga', title: 'Jagoan Benteng', cost: 50000, energy: 120, img: 'https://i.imgur.com/TMeipLU.png', color: 'from-red-500 to-rose-700' },
+        { id: 'mira', name: 'Mira', title: 'Kepala Kesehatan', cost: 50000, energy: 120, img: 'https://i.imgur.com/ehGsQpq.png', color: 'from-red-500 to-rose-700' },
+        { id: 'zaki', name: 'Zaki', title: 'Ahli Tata Kota', cost: 50000, energy: 120, img: 'https://i.imgur.com/ye3qha3.png', color: 'from-red-500 to-rose-700' },
+        { id: 'fina', name: 'Fina', title: 'Pakar Kreatif', cost: 50000, energy: 120, img: 'https://i.imgur.com/mg0oP4X.png', color: 'from-red-500 to-rose-700' },
+        { id: 'rizky', name: 'Rizky', title: 'Si Kilat', cost: 50000, energy: 120, img: 'https://i.imgur.com/55eYgUH.png', color: 'from-red-500 to-rose-700' },
+      ],
+      yellow: [
+        { id: 'arya', name: 'Arya', title: 'Penjaga Cahaya', cost: 120000, energy: 200, effect: 'Semua karakter +30 energi', img: 'https://i.imgur.com/EDXTdpT.png', color: 'from-yellow-400 to-amber-600' },
+        { id: 'suri', name: 'Suri', title: 'Penjaga Alam', cost: 120000, energy: 200, effect: 'Bonus energi perlengkapan', img: 'https://i.imgur.com/ft3FXch.png', color: 'from-yellow-400 to-amber-600' },
+        { id: 'reno', name: 'Reno', title: 'Penjaga Waktu', cost: 120000, energy: 200, effect: 'Ketahanan perlengkapan', img: 'https://i.imgur.com/LCcWoAn.png', color: 'from-yellow-400 to-amber-600' },
+      ]
+    };
+
+    const EQUIPMENTS = [
+      { id: 'l1_pagar', name: 'Pagar Kayu Kota', level: 1, cost: 10000, energy: 20, img: 'https://i.imgur.com/WDU4M2c.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l1_parit', name: 'Parit Pertahanan', level: 1, cost: 10000, energy: 20, img: 'https://i.imgur.com/lW3S7Kg.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l1_rambu', name: 'Rambu Pengalih', level: 1, cost: 10000, energy: 20, img: 'https://i.imgur.com/xORSdN9.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l2_tembok', name: 'Tembok Penjaga', level: 2, cost: 20000, energy: 40, img: 'https://i.imgur.com/q0JKgXj.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l2_menara', name: 'Menara Pengawas', level: 2, cost: 20000, energy: 40, img: 'https://i.imgur.com/q2ZeWmi.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l2_alarm', name: 'Alarm Kota', level: 2, cost: 20000, energy: 40, img: 'https://i.imgur.com/oy5SY8O.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l3_benteng', name: 'Benteng Kota Ceria', level: 3, cost: 30000, energy: 70, img: 'https://i.imgur.com/xnfBN5f.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l3_tungku', name: 'Tungku Cahaya', level: 3, cost: 30000, energy: 70, img: 'https://i.imgur.com/gfAdkWw.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l3_bola', name: 'Bola Tanaman Berduri', level: 3, cost: 30000, energy: 70, img: 'https://i.imgur.com/10cSqXD.png', color: 'from-blue-400 to-blue-600' },
+    ];
+
+    const ZOMBIE_IMGS = {
+      tersesat: 'https://i.imgur.com/Wr69CUM.png',
+      ngantuk: 'https://i.imgur.com/4ocuo93.png',
+      pemalu: 'https://i.imgur.com/8tvBC1J.png',
+      zirah: 'https://i.imgur.com/SeWyand.png',
+      profesor: 'https://i.imgur.com/1J3PAZq.png',
+      raja: 'https://i.imgur.com/6v8xJED.png'
+    };
+
+    const ZOMBIE_WAVES = [
+      // Level 1: Total 330
+      [
+        { name: 'Zombie Tersesat', energy: 80, img: ZOMBIE_IMGS.tersesat },
+        { name: 'Zombie Ngantuk', energy: 120, img: ZOMBIE_IMGS.ngantuk },
+        { name: 'Zombie Pemalu', energy: 130, img: ZOMBIE_IMGS.pemalu },
+      ],
+      // Level 2: Total 380
+      [
+        { name: 'Zombie Tersesat', energy: 80, img: ZOMBIE_IMGS.tersesat },
+        { name: 'Zombie Pemalu', energy: 140, img: ZOMBIE_IMGS.pemalu },
+        { name: 'Zombie Zirah', energy: 160, img: ZOMBIE_IMGS.zirah },
+      ],
+      // Level 3: Total 470
+      [
+        { name: 'Zombie Ngantuk', energy: 130, img: ZOMBIE_IMGS.ngantuk },
+        { name: 'Zombie Zirah', energy: 160, img: ZOMBIE_IMGS.zirah },
+        { name: 'Profesor Zombie', energy: 180, img: ZOMBIE_IMGS.profesor },
+      ],
+      // Level 4: Total 490
+      [
+        { name: 'Zombie Pemalu', energy: 140, img: ZOMBIE_IMGS.pemalu },
+        { name: 'Profesor Zombie', energy: 180, img: ZOMBIE_IMGS.profesor },
+        { name: 'Zombie Zirah', energy: 170, img: ZOMBIE_IMGS.zirah },
+      ],
+      // Level 5: Total 600
+      [
+        { name: 'Zombie Ngantuk', energy: 150, img: ZOMBIE_IMGS.ngantuk },
+        { name: 'Profesor Zombie', energy: 200, img: ZOMBIE_IMGS.profesor },
+        { name: 'Raja Zombie', energy: 250, img: ZOMBIE_IMGS.raja },
+      ]
+    ];
+
+    const QUIZ_REWARDS = {
+      easy: 5000,
+      medium: 7500,
+      hard: 10000
+    };
+
+    const BACKSONG_URL = "https://github.com/belajarituseru39-gif/Berdazi/raw/refs/heads/main/Ayo%20Main%20BERDAZI.mp3";
+
+    // --- COMPONENTS ---
+
+    const Card = ({ item, onClick, disabled, owned }) => (
+      <button 
+        onClick={onClick}
+        disabled={disabled}
+        className={`group relative flex flex-col items-center p-3 rounded-2xl transition-all w-full text-center overflow-hidden
+          ${disabled ? 'opacity-60 cursor-not-allowed grayscale bg-slate-100/50' : 'hover:scale-[1.02] hover:-translate-y-1 cursor-pointer bg-white'}
+          ${owned ? 'ring-2 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'border border-slate-200 shadow-md hover:shadow-xl'}
+        `}
+      >
+        {owned && (
+          <div className="absolute top-2 right-2 bg-gradient-to-r from-emerald-500 to-green-400 text-white text-[10px] px-3 py-1 rounded-full font-bold z-10 shadow-sm flex items-center gap-1">
+            <Sparkles size={10} /> MILIKMU
+          </div>
+        )}
+        
+        <div className="w-full h-28 mb-3 flex items-center justify-center rounded-xl overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 group-hover:from-white group-hover:to-slate-50 transition-colors relative">
+           <div className={`absolute inset-0 bg-gradient-to-tr ${item.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+           <img src={item.img} alt={item.name} className="h-full w-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500" />
+        </div>
+
+        <div className="font-bold text-slate-800 text-sm w-full truncate mb-1">{item.name}</div>
+        
+        <div className="flex justify-between items-center w-full mt-auto gap-2">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
+            <Zap size={10} /> {item.energy}
+          </div>
+          {!owned && (
+            <div className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">
+              {item.cost / 1000}k
+            </div>
+          )}
+        </div>
+      </button>
+    );
+
+    const ZombieCard = ({ item }) => (
+      <div className="bg-gradient-to-b from-white to-red-50/50 rounded-2xl p-2 border border-red-100 shadow-lg flex flex-col items-center w-36 md:w-48 shrink-0 relative group">
+        <div className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md z-10 animate-bounce delay-700">!</div>
+        <div className="w-full h-24 md:h-28 rounded-xl overflow-hidden mb-2 relative">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-0"></div>
+          <img src={item.img} alt={item.name} className="w-full h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-500" />
+        </div>
+        <div className="text-xs font-bold text-slate-800 text-center leading-tight truncate w-full px-1">{item.name}</div>
+        <div className="mt-2 w-full bg-red-100/80 text-red-700 py-1 rounded-lg text-[10px] md:text-xs font-bold flex items-center justify-center gap-1">
+          <Zap size={12} /> {item.energy}
+        </div>
+      </div>
+    );
+
+    // Tampilan Inventory Mini (Diperbesar)
+    const MiniCard = ({ item }) => (
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-24 h-36 md:w-28 md:h-40 flex flex-col items-center p-1 shrink-0 overflow-hidden relative hover:scale-105 transition-transform duration-300 group">
+        <div className={`absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r ${item.color}`}></div>
+        <div className="w-full h-full rounded-lg overflow-hidden relative">
+          <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+          <div className="absolute top-0 left-0 w-full h-full bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute bottom-2 left-0 w-full text-center text-xs font-bold text-slate-800 bg-white/80 py-1 backdrop-blur-sm">
+            {item.name}
+          </div>
+        </div>
+      </div>
+    );
+
+    const App = () => {
+      const BG_STYLE = "bg-[url('https://i.imgur.com/XV5sVKo.png')] bg-cover bg-center bg-no-repeat bg-fixed";
+
+      const [gameState, setGameState] = useState('intro'); 
+      const [activeOverlay, setActiveOverlay] = useState(null);
+      const [isFullscreen, setIsFullscreen] = useState(false);
+      const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+      const [showExitConfirm, setShowExitConfirm] = useState(false); // State konfirmasi Home
+      
+      const [playerName, setPlayerName] = useState(''); // State for player name
+      const [money, setMoney] = useState(0);
+      const [level, setLevel] = useState(0); 
+      const [myChars, setMyChars] = useState([]);
+      const [myEquip, setMyEquip] = useState([]);
+      const [notification, setNotification] = useState(null);
+      
+      const [currentQuestion, setCurrentQuestion] = useState(null);
+      const [quizFeedback, setQuizFeedback] = useState(null);
+      const [correctQuestions, setCorrectQuestions] = useState(new Set());
+
+      // Audio State
+      const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+      const audioRef = useRef(null);
+
+      const showNotification = (msg, type) => {
+        setNotification({ msg, type });
+        setTimeout(() => setNotification(null), 2500);
+      };
+
+      useEffect(() => {
+        // Initialize Audio
+        audioRef.current = new Audio(BACKSONG_URL);
+        audioRef.current.loop = true;
+        audioRef.current.volume = 0.5;
+
+        const handleFullscreenChange = () => {
+          setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        
+        return () => {
+          document.removeEventListener('fullscreenchange', handleFullscreenChange);
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+          }
+        };
+      }, []);
+
+      const toggleMusic = () => {
+        if (audioRef.current) {
+          if (isMusicPlaying) {
+            audioRef.current.pause();
+          } else {
+            audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+          }
+          setIsMusicPlaying(!isMusicPlaying);
+        }
+      };
+
+      // Efek Suara Kuis
+      const playSfx = (type) => {
+        const audio = new Audio();
+        if (type === 'correct') {
+          audio.src = 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3';
+        } else if (type === 'wrong') {
+          audio.src = 'https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3';
+        }
+        audio.volume = 0.6;
+        audio.play().catch(e => console.log("SFX play failed:", e));
+      };
+
+      const toggleFullscreen = async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+          } else {
+            if (document.exitFullscreen) {
+              await document.exitFullscreen();
+            }
+          }
+        } catch (err) {
+          console.warn("Fullscreen permission denied or not supported:", err);
+          showNotification("Mode Fullscreen diblokir oleh browser ini", "warning");
+        }
+      };
+
+      // Handle kembali ke halaman utama
+      const goHome = () => {
+        if (gameState === 'intro') return;
+        // Munculkan peringatan hanya jika sedang progres main
+        if (gameState === 'game' || gameState === 'quiz' || gameState === 'tutorial') {
+           setShowExitConfirm(true);
+        } else {
+           // Kondisi lain (menu, victory) bisa langsung kembali
+           setGameState('intro');
+           setMoney(0);
+           setMyChars([]);
+           setMyEquip([]);
+           setLevel(0);
+           setCorrectQuestions(new Set());
+           setActiveOverlay(null);
+           setShowLevelUpModal(false);
+        }
+      };
+
+      const calculateTotalEnergy = () => {
+        let baseEnergy = 0;
+        myChars.forEach(c => baseEnergy += c.energy);
+        myEquip.forEach(e => baseEnergy += e.energy);
+        
+        const hasArya = myChars.find(c => c.id === 'arya');
+        if (hasArya) baseEnergy += (30 * myChars.length);
+
+        const hasSuri = myChars.find(c => c.id === 'suri');
+        if (hasSuri) baseEnergy += (10 * myEquip.length);
+
+        return baseEnergy;
+      };
+
+      const currentWave = ZOMBIE_WAVES[level];
+      const waveTotalEnergy = currentWave.reduce((sum, z) => sum + z.energy, 0);
+      const totalEnergy = calculateTotalEnergy();
+      const canAttack = totalEnergy >= waveTotalEnergy;
+
+      // --- ACTIONS ---
+
+      const handleIntroSubmit = (e) => {
+        e.preventDefault();
+        if (playerName.trim()) {
+          setGameState('tutorial'); // Change to tutorial
+          // Try to play music on user interaction
+          if (audioRef.current && !isMusicPlaying) {
+            audioRef.current.play().then(() => {
+              setIsMusicPlaying(true);
+            }).catch(err => {
+              console.log("Auto-play prevented by browser policy", err);
+            });
+          }
+        }
+      };
+
+      const finishTutorial = () => {
+        setGameState('menu');
+      };
+
+      const startGame = () => {
+        setMoney(0);
+        setMyChars([]);
+        setMyEquip([]);
+        setLevel(0);
+        setCorrectQuestions(new Set());
+        setGameState('game');
+        setActiveOverlay(null);
+        setShowLevelUpModal(false);
+      };
+
+      const generateQuestion = (diff) => {
+        const questions = QUESTION_BANK[diff];
+        const randomIndex = Math.floor(Math.random() * questions.length);
+        const selectedQ = questions[randomIndex];
+
+        setCurrentQuestion({
+          ...selectedQ,
+          difficulty: diff
+        });
+        setGameState('quiz');
+        setActiveOverlay(null);
+        setQuizFeedback(null);
+      };
+
+      const handleQuizAnswer = (selectedIndex) => {
+        const isCorrect = selectedIndex === currentQuestion.a;
+        const reward = isCorrect ? QUIZ_REWARDS[currentQuestion.difficulty] : 0;
+        
+        // Memutar efek suara
+        playSfx(isCorrect ? 'correct' : 'wrong');
+
+        setQuizFeedback({
+          correct: isCorrect,
+          reward: reward,
+          correctAnswer: currentQuestion.options[currentQuestion.a]
+        });
+
+        if (isCorrect) {
+          setMoney(prev => prev + reward);
+          setCorrectQuestions(prev => new Set(prev).add(currentQuestion.q));
+        }
+      };
+
+      const buyItem = (item, type) => {
+        if (money < item.cost) {
+          showNotification("Uang tidak cukup!", "error");
+          return;
+        }
+        
+        if (type === 'character') {
+          if (myChars.some(c => c.id === item.id)) {
+            showNotification("Karakter sudah dimiliki!", "error");
+            return;
+          }
+          setMyChars([...myChars, item]);
+        } else {
+          if (myEquip.length >= 3) {
+            showNotification("Maksimal 3 perlengkapan!", "error");
+            return;
+          }
+          setMyEquip([...myEquip, {...item, uniqueId: Date.now()}]);
+        }
+
+        setMoney(prev => prev - item.cost);
+        showNotification(`Dibeli: ${item.name}`, "success");
+      };
+
+      const attackWave = () => {
+        if (totalEnergy < waveTotalEnergy) return;
+
+        if (level < 4) {
+          setShowLevelUpModal(true);
+        } else {
+          setGameState('victory');
+        }
+      };
+
+      const nextLevel = () => {
+        setLevel(prev => prev + 1);
+        setShowLevelUpModal(false);
+      };
+
+      // --- RENDERERS ---
+
+      const renderExitConfirmModal = () => (
+        <div className="fixed inset-0 bg-black/80 z-[110] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-800 border border-slate-600 p-6 md:p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+              <AlertTriangle size={32} className="text-red-500" />
+            </div>
+            <h3 className="text-2xl font-black text-white mb-2">Kembali ke Awal?</h3>
+            <p className="text-slate-300 mb-8 text-sm md:text-base">Progres permainan kamu saat ini akan diulang dari nol.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setShowExitConfirm(false)} className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-colors">Batal</button>
+              <button onClick={() => {
+                setShowExitConfirm(false);
+                setGameState('intro');
+                setMoney(0);
+                setMyChars([]);
+                setMyEquip([]);
+                setLevel(0);
+                setCorrectQuestions(new Set());
+                setActiveOverlay(null);
+                setShowLevelUpModal(false);
+              }} className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-500/30">Ya, Keluar</button>
+            </div>
+          </div>
+        </div>
+      );
+
+      const BackgroundWrapper = ({ children, overlayClass = "bg-slate-900/60", showControls = true }) => (
+        <div className={`min-h-screen ${BG_STYLE} relative font-sans overflow-hidden flex flex-col items-center justify-center`}>
+          <div className={`absolute inset-0 ${overlayClass} backdrop-blur-[4px]`} />
+          
+          {showExitConfirm && renderExitConfirmModal()}
+
+          {/* Animated Particles/Glows */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+            <div className="absolute top-[-10%] left-[20%] w-96 h-96 bg-purple-500/20 rounded-full blur-[100px] animate-pulse"></div>
+            <div className="absolute bottom-[-10%] right-[10%] w-96 h-96 bg-blue-500/20 rounded-full blur-[100px] animate-pulse delay-1000"></div>
+          </div>
+
+          {notification && (
+            <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] font-bold text-white flex items-center gap-3 animate-in slide-in-from-top-10 fade-in duration-300 w-max text-lg border border-white/20 backdrop-blur-xl
+              ${notification.type === 'error' ? 'bg-red-500/90' : notification.type === 'warning' ? 'bg-orange-500/90' : 'bg-emerald-500/90'}
+            `}>
+              {notification.type === 'error' ? <AlertTriangle size={24} /> : <CheckCircle size={24} />}
+              {notification.msg}
+            </div>
+          )}
+
+          {/* Top Right Controls */}
+          {showControls && (
+            <div className="fixed top-4 right-4 md:top-6 md:right-6 z-[90] flex gap-2">
+              {gameState !== 'intro' && (
+                <button 
+                  onClick={goHome} 
+                  className="bg-white/10 text-white p-2 md:p-3 rounded-xl hover:bg-red-500/80 transition-all shadow-lg backdrop-blur-md border border-white/10 active:scale-95"
+                  title="Kembali ke Halaman Awal"
+                >
+                  <Home size={20} className="md:w-6 md:h-6" />
+                </button>
+              )}
+              <button 
+                onClick={toggleMusic} 
+                className="bg-white/10 text-white p-2 md:p-3 rounded-xl hover:bg-white/20 transition-all shadow-lg backdrop-blur-md border border-white/10 active:scale-95"
+                title={isMusicPlaying ? "Matikan Musik" : "Nyalakan Musik"}
+              >
+                {isMusicPlaying ? <Volume2 size={20} className="md:w-6 md:h-6" /> : <VolumeX size={20} className="md:w-6 md:h-6" />}
+              </button>
+              <button 
+                onClick={toggleFullscreen} 
+                className="bg-white/10 text-white p-2 md:p-3 rounded-xl hover:bg-white/20 transition-all shadow-lg backdrop-blur-md border border-white/10 active:scale-95"
+                title="Mode Fullscreen"
+              >
+                {isFullscreen ? <Minimize size={20} className="md:w-6 md:h-6" /> : <Maximize size={20} className="md:w-6 md:h-6" />}
+              </button>
+            </div>
+          )}
+
+          <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
+            {children}
+          </div>
+        </div>
+      );
+
+      const renderLevelUpModal = () => (
+        <div className="fixed inset-0 bg-black/80 z-[80] flex items-center justify-center p-8 animate-in fade-in duration-300 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-indigo-900 to-purple-900 w-full max-w-lg rounded-[2rem] p-8 md:p-12 text-center relative border-4 border-yellow-400/50 shadow-[0_0_50px_rgba(168,85,247,0.5)] flex flex-col items-center">
+            <div className="absolute -top-12 bg-yellow-400 rounded-full p-4 border-4 border-indigo-900 shadow-xl">
+              <Star size={48} className="text-indigo-900 fill-indigo-900 animate-spin-slow" />
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-500 mb-4 mt-6">HEBAT!</h2>
+            <p className="text-indigo-100 text-xl mb-8">Komandan {playerName}, kamu berhasil mengamankan kota dari serangan gelombang {level + 1}.</p>
+            <div className="flex gap-4">
+              <button 
+                onClick={nextLevel}
+                className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white rounded-2xl font-black text-xl shadow-lg transform transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+              >
+                Lanjut Level {level + 2} <ArrowRight />
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderFundSelection = () => (
+        <div className="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center p-8 animate-in fade-in duration-200 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-2xl rounded-[3rem] p-8 md:p-12 relative animate-in slide-in-from-bottom-10 duration-300 shadow-2xl overflow-y-auto max-h-full">
+            <button onClick={() => setActiveOverlay(null)} className="absolute top-6 right-6 p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><X size={24}/></button>
+            <h2 className="text-4xl font-black text-slate-800 mb-2">Pilih Tantangan</h2>
+            <p className="text-slate-500 mb-10 text-lg">Semakin sulit, semakin banyak uang didapat.</p>
+            
+            <div className="space-y-4">
+              {[
+                { id: 'easy', label: 'Mudah', reward: 5000, color: 'emerald' },
+                { id: 'medium', label: 'Sedang', reward: 7500, color: 'amber' },
+                { id: 'hard', label: 'Sulit', reward: 10000, color: 'rose' }
+              ].map((item) => (
+                <button 
+                  key={item.id}
+                  onClick={() => generateQuestion(item.id)} 
+                  className={`w-full p-6 rounded-3xl font-bold flex justify-between items-center transition-all border group hover:scale-[1.02] hover:shadow-lg active:scale-95 bg-white
+                    ${item.id === 'easy' ? 'border-emerald-100 hover:border-emerald-300 hover:bg-emerald-50' : 
+                      item.id === 'medium' ? 'border-amber-100 hover:border-amber-300 hover:bg-amber-50' : 
+                      'border-rose-100 hover:border-rose-300 hover:bg-rose-50'}
+                  `}
+                >
+                  <div className="flex flex-col text-left">
+                      <span className={`text-2xl font-black ${
+                        item.id === 'easy' ? 'text-emerald-600' : item.id === 'medium' ? 'text-amber-600' : 'text-rose-600'
+                      }`}>{item.label}</span>
+                  </div>
+                  <div className="bg-slate-800 text-white px-6 py-3 rounded-2xl text-xl font-mono font-bold shadow-md group-hover:scale-110 transition-transform">
+                    +Rp {item.reward.toLocaleString()}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderShop = () => (
+        <div className="fixed inset-0 bg-slate-900/90 z-[60] flex flex-col animate-in slide-in-from-bottom duration-300 backdrop-blur-xl">
+          <div className="bg-white/5 p-6 md:p-8 flex items-center justify-between shadow-2xl z-10 border-b border-white/10">
+            <button onClick={() => setActiveOverlay(null)} className="px-6 py-3 bg-white/10 text-white hover:bg-white/20 rounded-2xl flex gap-3 items-center text-lg font-bold transition-all backdrop-blur-md">
+              <ChevronLeft size={24}/> Kembali
+            </button>
+            <div className="font-bold text-white flex gap-4 items-center bg-black/40 px-8 py-4 rounded-2xl border border-white/10 backdrop-blur-md">
+               <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.5)] text-2xl text-black font-bold">Rp</div>
+               <span className="text-3xl font-mono tracking-tight">{money.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-12 pb-32">
+            {[
+              { title: 'Karakter Dasar', color: 'text-emerald-400', border: 'border-emerald-500', items: CHARACTERS.green, type: 'character' },
+              { title: 'Karakter Ahli', color: 'text-rose-400', border: 'border-rose-500', items: CHARACTERS.red, type: 'character' },
+              { title: 'Karakter Legenda', color: 'text-amber-400', border: 'border-amber-500', items: CHARACTERS.yellow, type: 'character' },
+              { title: 'Perlengkapan Kota', color: 'text-blue-400', border: 'border-blue-500', items: EQUIPMENTS, type: 'equipment' }
+            ].map((section, idx) => (
+              <div key={idx}>
+                <h3 className={`text-xl font-black uppercase mb-6 px-4 tracking-widest border-l-4 pl-4 ${section.color} ${section.border}`}>{section.title}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 px-2">
+                  {section.items.map(item => (
+                    <Card 
+                      key={item.id} 
+                      item={item} 
+                      owned={section.type === 'character' ? myChars.some(c => c.id === item.id) : false}
+                      disabled={section.type === 'equipment' ? myEquip.length >= 3 : false}
+                      onClick={() => buyItem(item, section.type)} 
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+      // --- HALAMAN AWAL DIOPTIMALKAN ---
+      if (gameState === 'intro') {
+        return (
+          <BackgroundWrapper overlayClass="bg-slate-900/60" showControls={false}>
+            <div className="w-full max-w-[90%] md:max-w-xl px-2 animate-in fade-in zoom-in duration-700">
+              <div className="bg-white/10 backdrop-blur-xl rounded-[2rem] p-6 md:p-8 border-2 border-white/20 shadow-2xl text-center">
+                {/* Logo ditambahkan ke Halaman Awal */}
+                <div className="mb-4 flex justify-center">
+                  <img src="https://i.imgur.com/XkD9gcK.png" alt="BERDAZI Logo" className="w-[60%] max-w-[220px] md:max-w-[280px] drop-shadow-xl animate-float" />
+                </div>
+                
+                <h1 className="text-2xl md:text-4xl font-black text-white mb-3 leading-tight">
+                  SELAMAT DATANG,<br/>KOMANDAN!
+                </h1>
+                
+                <div className="text-slate-200 text-sm md:text-base space-y-2 mb-6 leading-relaxed font-medium">
+                  <p>Kota <span className="text-emerald-300 font-bold">BERDAZI</span> sedang dalam bahaya besar. Gerombolan Zombie mulai mendekat.</p>
+                </div>
+
+                <form onSubmit={handleIntroSubmit} className="flex flex-col gap-3 md:gap-4">
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                      type="text" 
+                      placeholder="Masukkan Namamu..." 
+                      className="w-full bg-white/90 text-slate-800 font-bold text-lg md:text-xl py-3 pl-12 pr-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all placeholder:text-slate-400"
+                      value={playerName}
+                      onChange={(e) => setPlayerName(e.target.value)}
+                      autoFocus
+                      required
+                    />
+                  </div>
+                  <button 
+                    type="submit"
+                    disabled={!playerName.trim()}
+                    className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-lg md:text-xl py-3 md:py-4 rounded-xl shadow-lg transform transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3"
+                  >
+                    LANJUT <ArrowRight fill="currentColor" />
+                  </button>
+                </form>
+                
+                <div className="mt-6 pt-4 border-t border-white/10 text-slate-300 text-[10px] md:text-xs flex flex-wrap justify-center items-center gap-1 md:gap-2">
+                  <span className="font-bold">Ide Permainan oleh Abdul Rahmat, S.Pd</span>
+                  <span className="hidden md:inline">•</span>
+                  <span>SDN 011 Balikpapan Tengah</span>
+                  <span className="hidden md:inline">•</span>
+                  <span className="opacity-75">Kontak: 081351767574</span>
+                </div>
+              </div>
+            </div>
+          </BackgroundWrapper>
+        );
+      }
+
+      if (gameState === 'tutorial') {
+        return (
+          <BackgroundWrapper overlayClass="bg-slate-900/60">
+            <div className="w-full max-w-3xl px-6 animate-in fade-in zoom-in duration-700">
+              <div className="bg-white/10 backdrop-blur-xl rounded-[3rem] p-8 md:p-12 border-2 border-white/20 shadow-2xl text-center">
+                <h2 className="text-3xl md:text-4xl font-black text-white mb-8 leading-tight uppercase tracking-wider">
+                  MISI UTAMA
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-left">
+                  <div className="bg-black/20 p-6 rounded-2xl border border-white/10 hover:bg-black/30 transition-colors">
+                    <div className="bg-purple-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-purple-400">
+                      <Brain size={28} />
+                    </div>
+                    <h3 className="font-bold text-white text-lg mb-2">1. Cari Dana</h3>
+                    <p className="text-slate-300 text-sm">Jawab pertanyaan umum untuk mengumpulkan uang bagi kota.</p>
+                  </div>
+
+                  <div className="bg-black/20 p-6 rounded-2xl border border-white/10 hover:bg-black/30 transition-colors">
+                    <div className="bg-emerald-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-emerald-400">
+                      <ShoppingBag size={28} />
+                    </div>
+                    <h3 className="font-bold text-white text-lg mb-2">2. Bangun Kota</h3>
+                    <p className="text-slate-300 text-sm">Gunakan uang untuk merekrut pasukan dan membeli perlengkapan pertahanan.</p>
+                  </div>
+
+                  <div className="bg-black/20 p-6 rounded-2xl border border-white/10 hover:bg-black/30 transition-colors">
+                    <div className="bg-red-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-red-400">
+                      <Skull size={28} />
+                    </div>
+                    <h3 className="font-bold text-white text-lg mb-2">3. Bertahan</h3>
+                    <p className="text-slate-300 text-sm">Pastikan energi tim cukup untuk mengalahkan gelombang zombie!</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={finishTutorial}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xl py-5 rounded-2xl shadow-lg transform transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
+                >
+                  SIAP LAKSANAKAN! <Play fill="currentColor" />
+                </button>
+              </div>
+            </div>
+          </BackgroundWrapper>
+        );
+      }
+
+      if (gameState === 'menu') {
+        return (
+          <BackgroundWrapper overlayClass="bg-slate-900/40">
+            <div className="text-center max-w-7xl w-full animate-in zoom-in duration-700 px-4 flex flex-col items-center">
+              
+              <div className="mb-8 relative flex justify-center">
+                <img src="https://i.imgur.com/XkD9gcK.png" alt="BERDAZI Logo" className="w-[80%] max-w-[400px] md:max-w-[500px] drop-shadow-2xl relative z-10 animate-float" />
+                <div className="absolute inset-0 bg-emerald-500/20 blur-[60px] rounded-full z-0"></div>
+              </div>
+              
+              <div className="text-2xl md:text-4xl font-bold text-emerald-100 mb-16 tracking-wide uppercase bg-black/20 px-8 py-2 rounded-full border border-white/10 backdrop-blur-sm shadow-xl mt-4">
+                Halo, Komandan {playerName}!
+              </div>
+              
+              <button 
+                onClick={startGame}
+                className="group relative w-full max-w-2xl py-6 md:py-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-[2.5rem] font-black text-3xl md:text-4xl text-white shadow-[0_0_50px_rgba(16,185,129,0.4)] hover:shadow-[0_0_80px_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center gap-6 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                <span className="relative z-10 flex items-center gap-4">MASUK KE KOTA <ArrowRight size={40} className="group-hover:translate-x-2 transition-transform"/></span>
+              </button>
+            </div>
+          </BackgroundWrapper>
+        );
+      }
+
+      if (gameState === 'victory') {
+        return (
+          <BackgroundWrapper overlayClass="bg-emerald-900/80">
+            <div className="text-center text-white px-4 animate-in fade-in duration-1000">
+              <div className="mb-8 relative inline-block">
+                <div className="absolute inset-0 bg-yellow-500/30 blur-[50px] animate-pulse"></div>
+                <h1 className="text-6xl md:text-8xl font-black mb-6 drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-500 relative z-10">KOTA SELAMAT!</h1>
+              </div>
+              
+              <p className="text-xl md:text-3xl opacity-90 mb-12 max-w-3xl mx-auto font-medium text-emerald-100">
+                Strategi brilian, Komandan {playerName}! Warga kota kini aman berkat pertahananmu.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl mx-auto mb-16">
+                <div className="bg-black/40 p-8 rounded-[2rem] border border-white/10 backdrop-blur-lg flex flex-col items-center">
+                  <div className="text-sm uppercase tracking-widest text-emerald-400 mb-2 font-bold">Sisa Uang</div>
+                  <div className="text-4xl md:text-5xl font-mono font-bold text-white">Rp {money.toLocaleString()}</div>
+                </div>
+                <div className="bg-black/40 p-8 rounded-[2rem] border border-white/10 backdrop-blur-lg flex flex-col items-center">
+                  <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-bold">Pasukan</div>
+                  <div className="text-4xl md:text-5xl font-mono font-bold text-white">{myChars.length} Unit</div>
+                </div>
+                <div className="bg-black/40 p-8 rounded-[2rem] border border-white/10 backdrop-blur-lg flex flex-col items-center md:col-span-2 lg:col-span-1">
+                  <div className="text-sm uppercase tracking-widest text-yellow-400 mb-2 font-bold">Soal Benar</div>
+                  <div className="text-4xl md:text-5xl font-mono font-bold text-white flex items-center gap-2">
+                    {correctQuestions.size} <Award size={40} className="text-yellow-400"/>
+                  </div>
+                </div>
+              </div>
+              
+              <button onClick={() => setGameState('menu')} className="bg-white text-emerald-900 px-16 py-6 rounded-full font-black text-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform hover:bg-emerald-50">
+                Main Lagi
+              </button>
+            </div>
+          </BackgroundWrapper>
+        );
+      }
+
+      if (gameState === 'quiz') {
+        return (
+          <BackgroundWrapper overlayClass="bg-slate-900/80">
+            <div className="w-full max-w-4xl bg-white rounded-[3rem] shadow-[0_20px_70px_rgba(0,0,0,0.5)] overflow-hidden relative mx-4 animate-in slide-in-from-bottom-20 duration-500">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white flex justify-between items-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                <div className="font-bold text-2xl md:text-3xl flex items-center gap-3 relative z-10"><Brain size={32}/> {currentQuestion.subject}</div>
+                <div className="text-base md:text-lg bg-white/20 px-4 py-1.5 rounded-full uppercase font-bold tracking-widest border border-white/30 backdrop-blur-sm relative z-10">
+                  {currentQuestion.difficulty === 'easy' ? 'Mudah' : currentQuestion.difficulty === 'medium' ? 'Sedang' : 'Sulit'}
+                </div>
+              </div>
+              
+              <div className="p-8 md:p-12 text-center bg-slate-50 min-h-[400px] flex flex-col justify-center">
+                {!quizFeedback ? (
+                  <>
+                    <div className="text-2xl md:text-4xl font-bold text-slate-800 mb-8 md:mb-12 font-serif leading-relaxed drop-shadow-sm px-4">
+                      "{currentQuestion.q}"
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                      {currentQuestion.options.map((opt, idx) => (
+                        <button 
+                          key={idx}
+                          onClick={() => handleQuizAnswer(idx)}
+                          className="bg-white border-2 border-slate-200 p-4 md:p-6 rounded-2xl text-lg md:text-xl font-medium text-slate-700 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 hover:shadow-lg transition-all text-left flex items-start gap-3 active:scale-[0.98]"
+                        >
+                          <span className="font-bold bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm">
+                            {String.fromCharCode(65 + idx)}
+                          </span>
+                          <span>{opt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="animate-in zoom-in duration-300 py-4 flex flex-col items-center">
+                    {quizFeedback.correct ? (
+                      <>
+                        <div className="w-24 h-24 md:w-32 md:h-32 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                          <div className="text-6xl md:text-8xl">🎉</div>
+                        </div>
+                        <h3 className="text-4xl md:text-5xl font-black mb-4 text-slate-800">BENAR!</h3>
+                        <div className="text-3xl md:text-4xl font-black text-green-600 bg-green-50 px-10 py-4 rounded-2xl border border-green-200 mt-4">
+                          + Rp {quizFeedback.reward.toLocaleString()}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                         <div className="w-24 h-24 md:w-32 md:h-32 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                          <div className="text-6xl md:text-8xl">😢</div>
+                        </div>
+                        <h3 className="text-4xl md:text-5xl font-black mb-4 text-slate-800">SALAH!</h3>
+                        <div className="bg-red-50 p-6 rounded-2xl border border-red-100 max-w-lg w-full">
+                          <p className="text-slate-500 font-medium text-lg mb-2 uppercase tracking-wide">Jawaban Benar:</p>
+                          <p className="text-2xl md:text-3xl font-bold text-slate-800 leading-tight">{quizFeedback.correctAnswer}</p>
+                        </div>
+                      </>
+                    )}
+                    <button onClick={() => setGameState('game')} className="mt-10 bg-slate-800 text-white px-12 py-5 rounded-2xl font-bold text-xl w-full max-w-sm hover:bg-slate-700 hover:-translate-y-1 transition-all shadow-lg">
+                      Lanjut Main
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </BackgroundWrapper>
+        );
+      }
+
+      // --- MAIN GAME UI ---
+      return (
+        <div className={`min-h-screen ${BG_STYLE} font-sans mx-auto relative shadow-2xl overflow-hidden flex flex-col`}>
+          <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[2px] pointer-events-none" />
+          
+          {showExitConfirm && renderExitConfirmModal()}
+
+          {notification && (
+            <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] font-bold text-white flex items-center gap-3 animate-in slide-in-from-top-10 fade-in duration-300 w-max text-lg border border-white/20 backdrop-blur-xl
+              ${notification.type === 'error' ? 'bg-red-500/90' : notification.type === 'warning' ? 'bg-orange-500/90' : 'bg-emerald-500/90'}
+            `}>
+              {notification.type === 'error' ? <AlertTriangle size={24} /> : <CheckCircle size={24} />}
+              {notification.msg}
+            </div>
+          )}
+
+          {showLevelUpModal && renderLevelUpModal()}
+
+          {/* Overlays */}
+          {activeOverlay === 'fund_selection' && renderFundSelection()}
+          {activeOverlay === 'shop' && renderShop()}
+
+          <div className="w-full max-w-7xl mx-auto flex flex-col h-screen relative z-10">
+            
+            {/* TOP HUD (Revisi Ikon Rapi Tidak Bertumpuk) */}
+            <div className="p-4 md:p-6 shrink-0 flex flex-wrap justify-between items-start gap-4">
+              
+              {/* Box Gelombang Kiri */}
+              <div className="glass-panel p-3 md:p-4 rounded-3xl shadow-lg flex items-center gap-3 md:gap-4 flex-1 min-w-[150px] max-w-xs">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-red-500/20 rounded-2xl flex items-center justify-center text-xl md:text-2xl shadow-inner border border-red-500/30">🧟</div>
+                <div>
+                  <div className="text-[10px] md:text-xs font-bold text-slate-300 uppercase tracking-widest">Gelombang</div>
+                  <div className="text-2xl md:text-3xl font-black text-white leading-none">{level + 1}<span className="text-sm md:text-lg text-slate-400 font-medium">/5</span></div>
+                </div>
+              </div>
+
+              {/* Box Dana dan Kontrol Kanan (Satu wadah agar sejajar/responsive) */}
+              <div className="flex flex-wrap items-center justify-end gap-3 md:gap-4">
+                
+                {/* Uang */}
+                <div className="glass-panel px-4 md:px-6 py-2 md:py-3 rounded-full shadow-lg flex items-center gap-2 md:gap-3">
+                  <div className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-widest mr-1 md:mr-2">Dana</div>
+                  <span className="text-yellow-400 text-xl md:text-2xl font-bold">Rp</span>
+                  <span className="text-2xl md:text-3xl font-mono font-black text-white">{money.toLocaleString()}</span>
+                </div>
+
+                {/* Ikon Sistem Tergabung (Mengganti posisi fixed yang mengganggu) */}
+                <div className="flex gap-2">
+                  <button 
+                    onClick={goHome} 
+                    className="glass-panel text-white p-2 md:p-3 rounded-xl hover:bg-red-500/80 transition-all shadow-lg active:scale-95 border border-white/10"
+                    title="Kembali ke Awal"
+                  >
+                    <Home size={20} className="md:w-6 md:h-6" />
+                  </button>
+                  <button 
+                    onClick={toggleMusic} 
+                    className="glass-panel text-white p-2 md:p-3 rounded-xl hover:bg-white/20 transition-all shadow-lg active:scale-95 border border-white/10"
+                    title={isMusicPlaying ? "Matikan Musik" : "Nyalakan Musik"}
+                  >
+                    {isMusicPlaying ? <Volume2 size={20} className="md:w-6 md:h-6" /> : <VolumeX size={20} className="md:w-6 md:h-6" />}
+                  </button>
+                  <button 
+                    onClick={toggleFullscreen} 
+                    className="glass-panel text-white p-2 md:p-3 rounded-xl hover:bg-white/20 transition-all shadow-lg active:scale-95 border border-white/10"
+                    title="Mode Fullscreen"
+                  >
+                    {isFullscreen ? <Minimize size={20} className="md:w-6 md:h-6" /> : <Maximize size={20} className="md:w-6 md:h-6" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* CENTER BATTLE ARENA */}
+            <div className="flex-1 flex flex-col md:flex-row items-stretch justify-center p-4 gap-6 overflow-hidden">
+              
+              {/* PLAYER AREA (Left) */}
+              <div className="order-2 md:order-1 flex-1 glass-panel rounded-[2.5rem] p-6 md:p-8 shadow-2xl flex flex-col gap-6 h-full overflow-hidden relative group transition-all hover:bg-slate-900/70">
+                <div className="flex justify-between items-center border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-3">
+                     <div className="bg-blue-500/20 p-2 rounded-xl text-blue-400 border border-blue-500/30"><Shield size={24}/></div>
+                     <span className="text-lg font-bold text-slate-200 uppercase tracking-widest">Kota Kita</span>
+                  </div>
+                  <div className={`text-4xl font-mono font-black flex items-center gap-2 ${canAttack ? 'text-emerald-400' : 'text-red-400'} drop-shadow-md`}>
+                    <Zap size={32} className="fill-current"/> {totalEnergy}
+                  </div>
+                </div>
+                
+                {/* Inventory Grid - Horizontal Scroll */}
+                <div className="flex-1 bg-black/20 rounded-3xl border border-white/5 p-4 overflow-x-auto overflow-y-hidden">
+                   <div className="flex flex-row gap-4 h-full items-center pl-2">
+                    {myChars.length === 0 && myEquip.length === 0 && (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-4 min-h-[150px]">
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center"><ShoppingBag size={24}/></div>
+                        <p className="font-medium">Pasukan kosong. Beli di toko!</p>
+                      </div>
+                    )}
+                    {myChars.map((c, i) => <MiniCard key={`c-${i}`} item={c} />)}
+                    {myEquip.map((e, i) => <MiniCard key={`e-${i}`} item={e} />)}
+                   </div>
+                </div>
+
+                <button 
+                  onClick={attackWave}
+                  disabled={!canAttack}
+                  className={`w-full py-5 rounded-2xl font-black text-2xl shadow-lg transition-all flex items-center justify-center gap-3 border-b-8 active:border-b-0 active:translate-y-2 shrink-0 relative overflow-hidden
+                    ${canAttack 
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-indigo-900 shadow-indigo-500/30 hover:scale-[1.02]' 
+                      : 'bg-slate-700 text-slate-500 cursor-not-allowed border-slate-800'}
+                  `}
+                >
+                  {canAttack && <div className="absolute inset-0 bg-white/10 animate-pulse"></div>}
+                  {canAttack ? 'SERANG ZOMBIE!' : 'ENERGI BELUM CUKUP'}
+                </button>
+              </div>
+
+              {/* VS Badge */}
+              <div className="order-1 md:order-2 flex items-center justify-center shrink-0 z-20 md:-mx-10 my-[-20px] md:my-0 pointer-events-none">
+                 <div className="bg-slate-900 text-white font-black w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-white/20 shadow-2xl text-xl flex items-center justify-center transform rotate-12 relative animate-float">
+                   <span className="relative z-10 italic text-red-500">VS</span>
+                   <div className="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
+                 </div>
+              </div>
+
+              {/* ENEMY AREA (Right) */}
+              <div className="order-1 md:order-3 flex-1 glass-panel rounded-[2.5rem] p-6 md:p-8 shadow-2xl text-center relative overflow-hidden flex flex-col h-min md:h-full transition-all hover:bg-slate-900/70">
+                 <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
+                  <div className="flex items-center gap-3">
+                     <div className="bg-red-500/20 p-2 rounded-xl text-red-400 border border-red-500/30"><Skull size={24}/></div>
+                     <span className="text-lg font-bold text-red-200 uppercase tracking-widest">Musuh</span>
+                  </div>
+                  <div className="text-4xl font-mono font-black flex items-center gap-2 text-red-400 drop-shadow-md">
+                    <Zap size={32} className="fill-current"/> {waveTotalEnergy}
+                  </div>
+                </div>
+
+                <div className="flex-1 flex flex-row flex-nowrap justify-start md:justify-center items-center gap-4 py-4 overflow-x-auto overflow-y-hidden px-4">
+                  {currentWave.map((z, idx) => <ZombieCard key={idx} item={z} />)}
+                </div>
+              </div>
+
+            </div>
+
+            {/* BOTTOM DOCK */}
+            <div className="p-6 pt-0 shrink-0 flex gap-4 md:gap-6 justify-center max-w-4xl mx-auto w-full">
+              <button 
+                onClick={() => setActiveOverlay('fund_selection')}
+                className="flex-1 glass-card hover:bg-purple-50 p-4 rounded-3xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-b-8 border-slate-300 hover:border-purple-300 active:border-b-0 active:translate-y-2 h-28 shadow-lg group"
+              >
+                <div className="bg-purple-100 p-3 rounded-2xl group-hover:scale-110 transition-transform"><Brain className="text-purple-600" size={28} /></div>
+                <span className="font-bold text-lg text-slate-800">Cari Dana</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveOverlay('shop')}
+                className="flex-1 glass-card hover:bg-emerald-50 p-4 rounded-3xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-b-8 border-slate-300 hover:border-emerald-300 active:border-b-0 active:translate-y-2 h-28 shadow-lg group"
+              >
+                <div className="bg-emerald-100 p-3 rounded-2xl group-hover:scale-110 transition-transform"><ShoppingBag className="text-emerald-600" size={28} /></div>
+                <span className="font-bold text-lg text-slate-800">Toko Kota</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
