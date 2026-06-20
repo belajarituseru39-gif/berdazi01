@@ -9,8 +9,8 @@
   <!-- React & ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <!-- Babel untuk JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Babel untuk JSX (Dikunci ke versi stabil untuk mencegah error import) -->
+  <script src="https://unpkg.com/@babel/standalone@7.24.4/babel.min.js"></script>
   
   <style>
     /* Custom Scrollbar hide */
@@ -58,7 +58,10 @@
 <body class="bg-slate-900 text-slate-100 overflow-hidden">
   <div id="root"></div>
 
-  <script type="text/babel">
+  <script type="text/babel" data-presets="react">
+    /** @jsx React.createElement */
+    /** @jsxFrag React.Fragment */
+    
     const { useState, useEffect, useRef } = React;
 
     // --- ICONS ---
