@@ -9,8 +9,8 @@
   <!-- React & ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <!-- Babel untuk JSX (Dikunci ke versi stabil untuk mencegah error import) -->
-  <script src="https://unpkg.com/@babel/standalone@7.24.4/babel.min.js"></script>
+  <!-- Babel untuk JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
   <style>
     /* Custom Scrollbar hide */
@@ -58,10 +58,7 @@
 <body class="bg-slate-900 text-slate-100 overflow-hidden">
   <div id="root"></div>
 
-  <script type="text/babel" data-presets="react">
-    /** @jsx React.createElement */
-    /** @jsxFrag React.Fragment */
-    
+  <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
     // --- ICONS ---
@@ -173,15 +170,15 @@
     };
 
     const EQUIPMENTS = [
-      { id: 'l1_pagar', name: 'Pagar Kayu Kota', level: 1, cost: 10000, energy: 20, img: 'https://i.imgur.com/WDU4M2c.png', color: 'from-blue-400 to-blue-600' },
-      { id: 'l1_parit', name: 'Parit Pertahanan', level: 1, cost: 10000, energy: 20, img: 'https://i.imgur.com/lW3S7Kg.png', color: 'from-blue-400 to-blue-600' },
-      { id: 'l1_rambu', name: 'Rambu Pengalih', level: 1, cost: 10000, energy: 20, img: 'https://i.imgur.com/xORSdN9.png', color: 'from-blue-400 to-blue-600' },
-      { id: 'l2_tembok', name: 'Tembok Penjaga', level: 2, cost: 20000, energy: 40, img: 'https://i.imgur.com/q0JKgXj.png', color: 'from-blue-400 to-blue-600' },
-      { id: 'l2_menara', name: 'Menara Pengawas', level: 2, cost: 20000, energy: 40, img: 'https://i.imgur.com/q2ZeWmi.png', color: 'from-blue-400 to-blue-600' },
-      { id: 'l2_alarm', name: 'Alarm Kota', level: 2, cost: 20000, energy: 40, img: 'https://i.imgur.com/oy5SY8O.png', color: 'from-blue-400 to-blue-600' },
-      { id: 'l3_benteng', name: 'Benteng Kota Ceria', level: 3, cost: 30000, energy: 70, img: 'https://i.imgur.com/xnfBN5f.png', color: 'from-blue-400 to-blue-600' },
-      { id: 'l3_tungku', name: 'Tungku Cahaya', level: 3, cost: 30000, energy: 70, img: 'https://i.imgur.com/gfAdkWw.png', color: 'from-blue-400 to-blue-600' },
-      { id: 'l3_bola', name: 'Bola Tanaman Berduri', level: 3, cost: 30000, energy: 70, img: 'https://i.imgur.com/10cSqXD.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l1_pagar', name: 'Pagar Kayu Kota', level: 1, cost: 5000, energy: 20, img: 'https://i.imgur.com/WDU4M2c.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l1_parit', name: 'Parit Pertahanan', level: 1, cost: 5000, energy: 20, img: 'https://i.imgur.com/lW3S7Kg.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l1_rambu', name: 'Rambu Pengalih', level: 1, cost: 5000, energy: 20, img: 'https://i.imgur.com/xORSdN9.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l2_tembok', name: 'Tembok Penjaga', level: 2, cost: 10000, energy: 40, img: 'https://i.imgur.com/q0JKgXj.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l2_menara', name: 'Menara Pengawas', level: 2, cost: 10000, energy: 40, img: 'https://i.imgur.com/q2ZeWmi.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l2_alarm', name: 'Alarm Kota', level: 2, cost: 10000, energy: 40, img: 'https://i.imgur.com/oy5SY8O.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l3_benteng', name: 'Benteng Kota Ceria', level: 3, cost: 15000, energy: 70, img: 'https://i.imgur.com/xnfBN5f.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l3_tungku', name: 'Tungku Cahaya', level: 3, cost: 15000, energy: 70, img: 'https://i.imgur.com/gfAdkWw.png', color: 'from-blue-400 to-blue-600' },
+      { id: 'l3_bola', name: 'Bola Tanaman Berduri', level: 3, cost: 15000, energy: 70, img: 'https://i.imgur.com/10cSqXD.png', color: 'from-blue-400 to-blue-600' },
     ];
 
     const ZOMBIE_IMGS = {
@@ -194,35 +191,35 @@
     };
 
     const ZOMBIE_WAVES = [
-      // Level 1: Total 330
+      // Level 1: Total 180
       [
-        { name: 'Zombie Tersesat', energy: 80, img: ZOMBIE_IMGS.tersesat },
-        { name: 'Zombie Ngantuk', energy: 120, img: ZOMBIE_IMGS.ngantuk },
-        { name: 'Zombie Pemalu', energy: 130, img: ZOMBIE_IMGS.pemalu },
+        { name: 'Zombie Tersesat', energy: 50, img: ZOMBIE_IMGS.tersesat },
+        { name: 'Zombie Ngantuk', energy: 70, img: ZOMBIE_IMGS.ngantuk },
+        { name: 'Zombie Pemalu', energy: 60, img: ZOMBIE_IMGS.pemalu },
       ],
-      // Level 2: Total 380
+      // Level 2: Total 230
       [
-        { name: 'Zombie Tersesat', energy: 80, img: ZOMBIE_IMGS.tersesat },
-        { name: 'Zombie Pemalu', energy: 140, img: ZOMBIE_IMGS.pemalu },
-        { name: 'Zombie Zirah', energy: 160, img: ZOMBIE_IMGS.zirah },
+        { name: 'Zombie Tersesat', energy: 50, img: ZOMBIE_IMGS.tersesat },
+        { name: 'Zombie Pemalu', energy: 60, img: ZOMBIE_IMGS.pemalu },
+        { name: 'Zombie Zirah', energy: 120, img: ZOMBIE_IMGS.zirah },
       ],
-      // Level 3: Total 470
+      // Level 3: Total 250
       [
-        { name: 'Zombie Ngantuk', energy: 130, img: ZOMBIE_IMGS.ngantuk },
-        { name: 'Zombie Zirah', energy: 160, img: ZOMBIE_IMGS.zirah },
-        { name: 'Profesor Zombie', energy: 180, img: ZOMBIE_IMGS.profesor },
+        { name: 'Zombie Ngantuk', energy: 70, img: ZOMBIE_IMGS.ngantuk },
+        { name: 'Zombie Zirah', energy: 120, img: ZOMBIE_IMGS.zirah },
+        { name: 'Zombie Pemalu', energy: 60, img: ZOMBIE_IMGS.profesor },
       ],
-      // Level 4: Total 490
+      // Level 4: Total 330
       [
-        { name: 'Zombie Pemalu', energy: 140, img: ZOMBIE_IMGS.pemalu },
-        { name: 'Profesor Zombie', energy: 180, img: ZOMBIE_IMGS.profesor },
-        { name: 'Zombie Zirah', energy: 170, img: ZOMBIE_IMGS.zirah },
+        { name: 'Zombie Pemalu', energy: 60, img: ZOMBIE_IMGS.pemalu },
+        { name: 'Profesor Zombie', energy: 150, img: ZOMBIE_IMGS.profesor },
+        { name: 'Zombie Zirah', energy: 120, img: ZOMBIE_IMGS.zirah },
       ],
-      // Level 5: Total 600
+      // Level 5: Total 420
       [
-        { name: 'Zombie Ngantuk', energy: 150, img: ZOMBIE_IMGS.ngantuk },
-        { name: 'Profesor Zombie', energy: 200, img: ZOMBIE_IMGS.profesor },
-        { name: 'Raja Zombie', energy: 250, img: ZOMBIE_IMGS.raja },
+        { name: 'Zombie Ngantuk', energy: 70, img: ZOMBIE_IMGS.ngantuk },
+        { name: 'Profesor Zombie', energy: 150, img: ZOMBIE_IMGS.profesor },
+        { name: 'Raja Zombie', energy: 200, img: ZOMBIE_IMGS.raja },
       ]
     ];
 
